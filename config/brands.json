@@ -1,0 +1,34 @@
+{
+  "brands": [
+    {
+      "id": "shreeshivam",
+      "name": "Shree Shivam",
+      "domain": "shreeshivam.com",
+      "gsc_property": "sc-domain:shreeshivam.com",
+      "ga4_property_id": "YOUR_GA4_ID_1",
+      "gmc_id": "YOUR_GMC_ID_1",
+      "shopify_url": "shreeshivam.myshopify.com",
+      "status": "active"
+    },
+    {
+      "id": "whitehanger",
+      "name": "White Hanger",
+      "domain": "whitehanger.com",
+      "gsc_property": "sc-domain:whitehanger.com",
+      "ga4_property_id": "YOUR_GA4_ID_2",
+      "gmc_id": "YOUR_GMC_ID_2",
+      "shopify_url": "whitehanger-fashion.myshopify.com",
+      "status": "active"
+    },
+    {
+      "id": "amchoor",
+      "name": "Amchoor",
+      "domain": "amchoor.com",
+      "gsc_property": "sc-domain:amchoor.com",
+      "ga4_property_id": "YOUR_GA4_ID_3",
+      "gmc_id": "YOUR_GMC_ID_3",
+      "shopify_url": "amchoor-official.myshopify.com",
+      "status": "active"
+    }
+  ]
+}
