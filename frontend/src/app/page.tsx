@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const [brands, setBrands] = useState([]);
-  const [auditResults, setAuditResults] = useState(null);
-  const [investigationResults, setInvestigationResults] = useState({});
-  const [fixSuggestions, setFixSuggestions] = useState({});
-  const [activityLogs, setActivityLogs] = useState([
+  const [brands, setBrands] = useState<any[]>([]);
+  const [auditResults, setAuditResults] = useState<any>(null);
+  const [investigationResults, setInvestigationResults] = useState<any>({});
+  const [fixSuggestions, setFixSuggestions] = useState<any>({});
+  const [activityLogs, setActivityLogs] = useState<any[]>([
     { id: 1, time: "Just now", msg: "brandHub v.0.0 Online", type: "system" }
   ]);
   const [loading, setLoading] = useState(false);
-  const [investigating, setInvestigating] = useState(null);
-  const [fixing, setFixing] = useState(null);
+  const [investigating, setInvestigating] = useState<string | null>(null);
+  const [fixing, setFixing] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState("all");
 
   const addLog = (msg: string, type: string = "info") => {
