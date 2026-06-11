@@ -20,7 +20,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetch("http://localhost:8000/brands")
+    fetch("/brands")
       .then((res) => res.json())
       .then((data) => setBrands(data))
       .catch((err) => console.error("Error fetching brands:", err));
@@ -30,7 +30,7 @@ export default function Home() {
     setLoading(true);
     addLog("Starting global multi-brand audit...", "agent");
     try {
-      const res = await fetch("http://localhost:8000/agents/monitor/audit");
+      const res = await fetch("/agents/monitor/audit");
       const data = await res.json();
       setAuditResults(data);
       addLog("Global audit complete. Status: Active", "success");
@@ -45,7 +45,7 @@ export default function Home() {
     setInvestigating(brandId);
     addLog(`Auditor Agent starting investigation for ${brandId}...`, "agent");
     try {
-      const res = await fetch(`http://localhost:8000/agents/auditor/investigate/${brandId}`);
+      const res = await fetch(`/agents/auditor/investigate/${brandId}`);
       const data = await res.json();
       setInvestigationResults(prev => ({ ...prev, [brandId]: data }));
       addLog(`Investigation for ${brandId} complete. Hypothesis formulated.`, "success");
@@ -60,7 +60,7 @@ export default function Home() {
     setFixing(brandId);
     addLog(`Content Agent drafting AI fix for ${brandId} (Fable 5)...`, "agent");
     try {
-      const res = await fetch(`http://localhost:8000/agents/content/draft-fix/${brandId}/12345`);
+      const res = await fetch(`/agents/content/draft-fix/${brandId}/12345`);
       const data = await res.json();
       setFixSuggestions(prev => ({ ...prev, [brandId]: data }));
       addLog(`AI content draft ready for ${brandId}.`, "success");
