@@ -15,7 +15,13 @@ class GSCFetcher:
     MCP-compatible tool for fetching data from Google Search Console.
     """
     def __init__(self):
-        self.creds = auth_manager.get_google_creds()
+        from google.oauth2.credentials import Credentials
+        token = os.getenv("GSC_TOKEN")
+        if token:
+            self.creds = Credentials(token=token)
+        else:
+            self.creds = auth_manager.get_google_creds()
+            
         self.service = build('searchconsole', 'v1', credentials=self.creds)
 
     def get_performance_summary(self, site_url: str, days: int = 7):
