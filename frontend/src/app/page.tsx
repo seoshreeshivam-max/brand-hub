@@ -173,19 +173,56 @@ export default function Home() {
             
             {activeTab === "dashboard" && (
               <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
-                <div className="grid grid-cols-3 gap-8">
-                  <StatCard title="Total Visibility" value={currentAudit?.seo?.latest_clicks ?? "—"} label="Last 7d Clicks" color="slate" />
-                  <StatCard title="Gross Revenue" value={currentAudit?.retail ? `₹${Math.round(currentAudit.retail.total_sales/1000)}k` : "—"} label="30d Shopify" color="blue" />
-                  <StatCard title="SEO Health" value={currentAudit?.status === "healthy" ? "100%" : "Critical"} label="System Scan" color={currentAudit?.status === "healthy" ? "emerald" : "red"} />
+                <header>
+                   <h2 className="text-3xl font-black tracking-tight mb-2">Portfolio Overview</h2>
+                   <p className="text-slate-500 font-bold">Real-time performance and active diagnostic rules.</p>
+                </header>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <StatCard title="Total Clicks" value={currentAudit?.seo?.latest_clicks ?? "—"} label="GSC (Last 7d)" color="slate" icon="🖱️" />
+                  <StatCard title="Gross Revenue" value={currentAudit?.retail ? `${currentAudit.retail.currency} ${Math.round(currentAudit.retail.total_sales/1000)}k` : "—"} label="Shopify (Last 30d)" color="blue" icon="💰" />
+                  <StatCard title="Total Orders" value={currentAudit?.retail?.order_count ?? "—"} label="Shopify (Last 30d)" color="emerald" icon="📦" />
+                  <StatCard title="System Health" value={currentAudit?.status === "healthy" ? "Optimal" : "Alerts"} label="Live Scan" color={currentAudit?.status === "healthy" ? "emerald" : "red"} icon="🛡️" />
                 </div>
 
                 <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50">
-                   <h3 className="text-xl font-black mb-8 flex items-center gap-3">
-                     <span className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-sm">📈</span>
-                     Performance Analytics
-                   </h3>
-                   <div className="h-64 bg-slate-50 rounded-3xl flex items-center justify-center border-2 border-dashed border-slate-200">
-                      <p className="text-slate-400 font-bold text-sm italic">GSC Sparkline Data Loading...</p>
+                   <div className="flex justify-between items-center mb-10">
+                     <h3 className="text-2xl font-black flex items-center gap-3">
+                       <span className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-lg">⚙️</span>
+                       Active Diagnostic Engines
+                     </h3>
+                     <span className="bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">4 Rules Active</span>
+                   </div>
+                   
+                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                     <LogicBox 
+                        title="Inventory-SEO Sync Engine"
+                        logic="IF Product.Stock == 0 AND Product.Status == 'active' THEN Action='Draft'"
+                        desc="Prevents wasted crawl budget and high bounce rates by ensuring only restocked items are indexable by Google. Flags mismatches immediately."
+                        status={currentInvestigation?.findings?.out_of_sync_count !== undefined ? `${currentInvestigation.findings.out_of_sync_count} Mismatches` : "Waiting for Investigation..."}
+                        statusColor={currentInvestigation?.findings?.out_of_sync_count > 0 ? "amber" : "slate"}
+                     />
+                     <LogicBox 
+                        title="Content Depth Engine"
+                        logic="IF Product.Description.Length < 100 chars THEN Action='Fable 5 Rewrite'"
+                        desc="Identifies 'Thin Content' pages that hurt overall domain authority and pushes them directly to the Content Agent for bulk AI rewriting."
+                        status={currentInvestigation?.findings?.thin_content_count !== undefined ? `${currentInvestigation.findings.thin_content_count} Weak Pages` : "Waiting for Investigation..."}
+                        statusColor={currentInvestigation?.findings?.thin_content_count > 0 ? "amber" : "slate"}
+                     />
+                     <LogicBox 
+                        title="Cannibalization Engine"
+                        logic="IF COUNT(URLs) > 1 for Top_Query THEN Action='Consolidate'"
+                        desc="Analyzes GSC query data to find distinct products or blogs competing for the exact same SERP real estate, flagging them for canonical fixes."
+                        status="Active Scanner"
+                        statusColor="emerald"
+                     />
+                     <LogicBox 
+                        title="CTR Decay Engine"
+                        logic="IF Impressions == Stable AND Clicks_Drop > 20% THEN Action='Metadata Inject'"
+                        desc="Detects keywords where rankings are holding but users stopped clicking, triggering an automatic title rewrite to regain CTR momentum."
+                        status="Active Scanner"
+                        statusColor="emerald"
+                     />
                    </div>
                 </div>
               </div>
@@ -368,7 +405,7 @@ export default function Home() {
   );
 }
 
-function StatCard({ title, value, label, color }: any) {
+function StatCard({ title, value, label, color, icon }: any) {
   const colorMap: any = {
     slate: "text-slate-900",
     blue: "text-blue-600",
@@ -379,10 +416,41 @@ function StatCard({ title, value, label, color }: any) {
   return (
     <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col justify-between">
       <div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">{title}</p>
+        <div className="flex justify-between items-start mb-4">
+           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{title}</p>
+           {icon && <span className="text-xl">{icon}</span>}
+        </div>
         <p className={`text-4xl font-black ${colorMap[color]} tracking-tighter tabular-nums`}>{value}</p>
       </div>
       <p className="text-[10px] font-bold text-slate-300 mt-4 italic">{label}</p>
+    </div>
+  );
+}
+
+function LogicBox({ title, logic, desc, status, statusColor }: any) {
+  const badgeMap: any = {
+    slate: "bg-slate-100 text-slate-500",
+    amber: "bg-amber-100 text-amber-700",
+    emerald: "bg-emerald-100 text-emerald-700"
+  };
+
+  return (
+    <div className="bg-slate-50 p-8 rounded-3xl border border-slate-200/60 flex flex-col justify-between group hover:border-blue-200 transition-colors">
+      <div>
+        <div className="flex justify-between items-start mb-4">
+          <h4 className="font-black text-slate-800 text-lg tracking-tight">{title}</h4>
+          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${badgeMap[statusColor]}`}>
+            {status}
+          </span>
+        </div>
+        <div className="bg-slate-900 rounded-xl p-4 mb-4 font-mono text-[10px] text-emerald-400 shadow-inner">
+          <span className="text-blue-400"># DIAGNOSTIC_RULE</span><br/>
+          {logic}
+        </div>
+        <p className="text-xs font-bold text-slate-500 leading-relaxed">
+          {desc}
+        </p>
+      </div>
     </div>
   );
 }
