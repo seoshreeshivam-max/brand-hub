@@ -16,7 +16,7 @@ export default function Home() {
   const [selectedBrand, setSelectedBrand] = useState("all");
 
   const addLog = (msg: string, type: string = "info") => {
-    setActivityLogs(prev => [{ id: Date.now(), time: new Date().toLocaleTimeString(), msg, type }, ...prev].slice(0, 10));
+    setActivityLogs((prev: any[]) => [{ id: Date.now(), time: new Date().toLocaleTimeString(), msg, type }, ...prev].slice(0, 10));
   };
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function Home() {
     try {
       const res = await fetch(`/agents/auditor/investigate/${brandId}`);
       const data = await res.json();
-      setInvestigationResults(prev => ({ ...prev, [brandId]: data }));
+      setInvestigationResults((prev: any) => ({ ...prev, [brandId]: data }));
       addLog(`Investigation for ${brandId} complete. Hypothesis formulated.`, "success");
     } catch (err) {
       addLog(`Investigation for ${brandId} failed.`, "error");
@@ -62,7 +62,7 @@ export default function Home() {
     try {
       const res = await fetch(`/agents/content/draft-fix/${brandId}/12345`);
       const data = await res.json();
-      setFixSuggestions(prev => ({ ...prev, [brandId]: data }));
+      setFixSuggestions((prev: any) => ({ ...prev, [brandId]: data }));
       addLog(`AI content draft ready for ${brandId}.`, "success");
     } catch (err) {
       addLog(`AI fix drafting failed for ${brandId}.`, "error");
