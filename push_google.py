@@ -3,9 +3,9 @@ import subprocess
 import os
 
 def push_google_token():
-    token_path = r"C:\Users\shree\OneDrive\Documents\mynk\Credentials\gmail_token.json"
+    token_path = r"C:\Users\shree\AppData\Roaming\gcloud\application_default_credentials.json"
     if not os.path.exists(token_path):
-        print("gmail_token.json not found.")
+        print("ADC file not found.")
         return
 
     with open(token_path, "r", encoding="utf-8") as f:

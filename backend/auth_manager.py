@@ -6,8 +6,10 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from dotenv import load_dotenv
 
-# Load .env from project root
-load_dotenv()
+# Load .env and .env.local from project root
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+load_dotenv(os.path.join(BASE_DIR, ".env.local"))
 
 class AuthManager:
     """
@@ -28,7 +30,7 @@ class AuthManager:
             creds = Credentials.from_authorized_user_info(creds_data)
         else:
             # Local Dev Path: Fallback to local file if ENV not set
-            local_path = r"C:\Users\shree\OneDrive\Documents\mynk\Credentials\gmail_token.json"
+            local_path = r"C:\Users\shree\AppData\Roaming\gcloud\application_default_credentials.json"
             if os.path.exists(local_path):
                 creds = Credentials.from_authorized_user_file(local_path)
             else:
