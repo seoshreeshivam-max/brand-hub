@@ -12,6 +12,10 @@
   ],
   "rewrites": [
     {
+      "source": "/mcp/(.*)",
+      "destination": "/backend/main.py"
+    },
+    {
       "source": "/agents/(.*)",
       "destination": "/backend/main.py"
     },
