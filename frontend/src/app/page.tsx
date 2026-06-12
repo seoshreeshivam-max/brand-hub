@@ -242,6 +242,47 @@ export default function Home() {
                     <p className="text-slate-400 font-bold">No diagnostic data available. Start an investigation to begin.</p>
                   </div>
                 )}
+
+                {currentInvestigation?.findings?.sample_issues && (
+                  <div className="bg-white rounded-[40px] border border-slate-100 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-8">
+                    <div className="p-8 border-b border-slate-50 bg-slate-50/50">
+                      <h3 className="font-black uppercase tracking-widest text-xs text-slate-500">Critical Product Audit (Sample)</h3>
+                    </div>
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50/30 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-8 py-4">Product Name</th>
+                          <th className="px-8 py-4">Category</th>
+                          <th className="px-8 py-4">Stock</th>
+                          <th className="px-8 py-4">Status</th>
+                          <th className="px-8 py-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {currentInvestigation.findings.sample_issues.map((p: any) => (
+                          <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-8 py-4">
+                              <p className="font-bold text-sm text-slate-800">{p.name}</p>
+                              <p className="text-[10px] text-slate-400 font-mono italic">ID: {p.id}</p>
+                            </td>
+                            <td className="px-8 py-4 text-xs font-bold text-blue-600 uppercase tracking-tight">{p.category}</td>
+                            <td className="px-8 py-4">
+                              <span className={`text-xs font-black ${p.inventory > 0 ? 'text-emerald-600' : 'text-red-500'}`}>{p.inventory} units</span>
+                            </td>
+                            <td className="px-8 py-4">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${p.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                                {p.status}
+                              </span>
+                            </td>
+                            <td className="px-8 py-4 text-right">
+                              <button className="text-[10px] font-black text-indigo-600 uppercase hover:underline">Edit SEO</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
