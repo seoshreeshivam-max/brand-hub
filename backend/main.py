@@ -18,8 +18,23 @@ from backend.auth_manager import auth_manager
 from agents.monitor_agent import MonitorAgent
 from agents.auditor_agent import auditor_agent
 from agents.content_agent import content_agent
+from mcp_tools.concept_parser import concept_parser
 
 app = FastAPI(title="brandHub API", version="0.0.1")
+
+# ... existing routes ...
+
+@app.get("/mcp/concept-parse/{topic}")
+async def run_concept_parser(topic: str):
+    """
+    Demo endpoint for the Agentic Concept Parser MCP tool.
+    """
+    try:
+        result = concept_parser.parse_concept(topic)
+        return {"status": "success", "mcp_tool_output": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # --- PRODUCTION CORS SETUP ---
 origins = [
