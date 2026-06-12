@@ -3,247 +3,360 @@
 import { useState, useEffect } from "react";
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [brands, setBrands] = useState<any[]>([]);
   const [auditResults, setAuditResults] = useState<any>(null);
   const [investigationResults, setInvestigationResults] = useState<any>({});
   const [fixSuggestions, setFixSuggestions] = useState<any>({});
   const [activityLogs, setActivityLogs] = useState<any[]>([
-    { id: 1, time: "Just now", msg: "brandHub v.0.0 Online", type: "system" }
+    { id: 1, time: "Just now", msg: "brandHub v1.0 Professional initialized", type: "system" }
   ]);
   const [loading, setLoading] = useState(false);
   const [investigating, setInvestigating] = useState<string | null>(null);
   const [fixing, setFixing] = useState<string | null>(null);
-  const [selectedBrand, setSelectedBrand] = useState("all");
 
   const addLog = (msg: string, type: string = "info") => {
-    setActivityLogs((prev: any[]) => [{ id: Date.now(), time: new Date().toLocaleTimeString(), msg, type }, ...prev].slice(0, 10));
+    setActivityLogs((prev: any[]) => [{ id: Date.now(), time: new Date().toLocaleTimeString(), msg, type }, ...prev].slice(0, 15));
   };
 
   useEffect(() => {
     fetch("/brands")
       .then((res) => res.json())
-      .then((data) => setBrands(data))
+      .then((data) => {
+        setBrands(data);
+        if (data.length > 0 && !selectedBrandId) {
+          setSelectedBrandId(data[0].id); // Auto-select first brand
+        }
+      })
       .catch((err) => console.error("Error fetching brands:", err));
   }, []);
 
+  // Effect to auto-sync when brand changes
+  useEffect(() => {
+    if (selectedBrandId) {
+      runAudit();
+    }
+  }, [selectedBrandId]);
+
   const runAudit = async () => {
     setLoading(true);
-    addLog("Starting global multi-brand audit...", "agent");
+    addLog(`Syncing global performance for all brands...`, "agent");
     try {
       const res = await fetch("/agents/monitor/audit");
       const data = await res.json();
       setAuditResults(data);
-      addLog("Global audit complete. Status: Active", "success");
+      addLog("Global sync complete.", "success");
     } catch (err) {
-      addLog("Audit failed. Check backend connection.", "error");
+      addLog("Sync failed. Check backend connection.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const runInvestigation = async (brandId: string) => {
-    setInvestigating(brandId);
-    addLog(`Auditor Agent starting investigation for ${brandId}...`, "agent");
+  const currentBrand = brands.find(b => b.id === selectedBrandId);
+  const currentAudit = auditResults?.[selectedBrandId || ""];
+  const currentInvestigation = investigationResults?.[selectedBrandId || ""];
+  const currentSuggestion = fixSuggestions?.[selectedBrandId || ""];
+
+  const runInvestigation = async () => {
+    if (!selectedBrandId) return;
+    setInvestigating(selectedBrandId);
+    addLog(`Running deep diagnostic for ${selectedBrandId}...`, "agent");
     try {
-      const res = await fetch(`/agents/auditor/investigate/${brandId}`);
+      const res = await fetch(`/agents/auditor/investigate/${selectedBrandId}`);
       const data = await res.json();
-      setInvestigationResults((prev: any) => ({ ...prev, [brandId]: data }));
-      addLog(`Investigation for ${brandId} complete. Hypothesis formulated.`, "success");
+      setInvestigationResults((prev: any) => ({ ...prev, [selectedBrandId]: data }));
+      addLog(`Diagnostic for ${selectedBrandId} complete.`, "success");
     } catch (err) {
-      addLog(`Investigation for ${brandId} failed.`, "error");
+      addLog(`Diagnostic failed.`, "error");
     } finally {
       setInvestigating(null);
     }
   };
 
-  const runFix = async (brandId: string) => {
-    setFixing(brandId);
-    addLog(`Content Agent drafting AI fix for ${brandId} (Fable 5)...`, "agent");
+  const runFix = async () => {
+    if (!selectedBrandId) return;
+    setFixing(selectedBrandId);
+    addLog(`Content Agent drafting strategic fix (Fable 5)...`, "agent");
     try {
-      const res = await fetch(`/agents/content/draft-fix/${brandId}/12345`);
+      const res = await fetch(`/agents/content/draft-fix/${selectedBrandId}/12345`);
       const data = await res.json();
-      setFixSuggestions((prev: any) => ({ ...prev, [brandId]: data }));
-      addLog(`AI content draft ready for ${brandId}.`, "success");
+      setFixSuggestions((prev: any) => ({ ...prev, [selectedBrandId]: data }));
+      addLog(`Strategic draft ready for review.`, "success");
     } catch (err) {
-      addLog(`AI fix drafting failed for ${brandId}.`, "error");
+      addLog(`AI drafting failed.`, "error");
     } finally {
       setFixing(null);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] flex font-sans">
-      {/* Sidebar Log */}
-      <aside className="w-80 bg-white border-r border-slate-200 hidden lg:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="p-8 border-b border-slate-100">
-          <h2 className="font-black text-slate-900 flex items-center gap-3 text-xs uppercase tracking-widest">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            Live Operations
-          </h2>
+    <main className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
+      {/* PROFESSIONAL SIDEBAR */}
+      <aside className="w-72 bg-slate-900 flex flex-col shadow-2xl">
+        <div className="p-8">
+          <h1 className="text-2xl font-black text-white tracking-tighter">brand<span className="text-blue-500">Hub</span></h1>
+          <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">SEO Orchestration</p>
         </div>
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {activityLogs.map(log => (
-            <div key={log.id} className="group">
-              <span className="text-[10px] text-slate-400 font-mono block mb-1 opacity-0 group-hover:opacity-100 transition-opacity">{log.time}</span>
-              <p className={`text-xs font-semibold leading-relaxed ${
-                log.type === "error" ? "text-red-500" : 
-                log.type === "success" ? "text-emerald-600" : 
-                log.type === "agent" ? "text-indigo-600" : "text-slate-600"
-              }`}>
-                {log.msg}
-              </p>
-            </div>
+
+        <nav className="flex-1 px-4 space-y-2">
+          {[
+            { id: "dashboard", label: "Overview", icon: "📊" },
+            { id: "diagnostics", label: "Diagnostics", icon: "🩺" },
+            { id: "planner", label: "Content Planner", icon: "📅" },
+            { id: "injectors", label: "Bulk Injectors", icon: "💉" },
+            { id: "history", label: "Agent History", icon: "📜" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                activeTab === tab.id 
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-900/50" 
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              }`}
+            >
+              <span>{tab.icon}</span>
+              {tab.label}
+            </button>
           ))}
-        </div>
-        <div className="p-6 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-400 font-mono text-center tracking-tighter">
-          HUB.SHREESHIVAM.COM // SYSTEM_V0.0_ACTIVE
+        </nav>
+
+        <div className="p-6 bg-slate-800/50 mt-auto">
+          <div className="flex items-center gap-3">
+             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Live</span>
+          </div>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 p-12 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          <header className="flex justify-between items-end mb-16">
-            <div>
-              <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded mb-2 inline-block tracking-widest">ENTERPRISE</span>
-              <h1 className="text-5xl font-black text-slate-900 tracking-tighter mb-1">brand<span className="text-blue-600">Hub</span></h1>
-              <p className="text-slate-400 font-bold text-sm tracking-tight">Autonomous Multi-Brand Orchestration</p>
-            </div>
-            <div className="flex gap-4">
+      {/* MAIN WORKSPACE */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* TOP COMMAND HEADER */}
+        <header className="h-20 bg-white border-b border-slate-200 px-12 flex justify-between items-center shrink-0">
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Brand</span>
               <select 
-                className="bg-white border-2 border-slate-100 rounded-2xl px-6 py-3 text-sm font-bold text-slate-700 shadow-sm focus:border-blue-500 outline-none transition-all cursor-pointer"
-                value={selectedBrand}
-                onChange={(e) => setSelectedBrand(e.target.value)}
+                className="font-black text-lg text-slate-900 focus:outline-none cursor-pointer bg-transparent"
+                value={selectedBrandId || ""}
+                onChange={(e) => setSelectedBrandId(e.target.value)}
               >
-                <option value="all">Full Portfolio</option>
-                {brands.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
+                {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
-              <button 
-                onClick={runAudit}
-                disabled={loading}
-                className="bg-slate-900 hover:bg-black text-white px-10 py-3 rounded-2xl text-sm font-black transition-all shadow-[0_20px_40px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] disabled:opacity-50 active:scale-95"
-              >
-                {loading ? "SYNCING..." : "SYNC ALL"}
-              </button>
             </div>
-          </header>
+            <div className="h-8 w-px bg-slate-200"></div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Context</span>
+              <span className="font-bold text-sm text-blue-600 uppercase">{activeTab}</span>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
-            {brands.map((brand) => {
-              const audit = auditResults?.[brand.id];
-              const investigation = investigationResults?.[brand.id];
-              const suggestion = fixSuggestions?.[brand.id];
-              const isAnomaly = audit?.status === "anomaly_detected";
-              
-              return (
-                <div key={brand.id} className="group">
-                  <div className={`h-full bg-white p-10 rounded-[40px] border-2 ${isAnomaly ? 'border-red-100 shadow-[0_20px_50px_rgba(239,68,68,0.05)]' : 'border-slate-50 shadow-[0_20px_50px_rgba(0,0,0,0.02)]'} group-hover:shadow-[0_30px_60px_rgba(0,0,0,0.05)] transition-all duration-500 relative overflow-hidden`}>
-                    
-                    {/* Status Bar */}
-                    <div className={`absolute top-0 left-0 right-0 h-1.5 ${
-                      audit ? (isAnomaly ? 'bg-red-500' : 'bg-emerald-500') : 'bg-slate-100'
-                    }`}></div>
+          <div className="flex gap-4">
+            <button 
+              onClick={runAudit}
+              disabled={loading}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+            >
+              {loading ? "Syncing..." : "Refresh Data"}
+            </button>
+            <button className="bg-blue-600 text-white px-8 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">
+              Execute Agent
+            </button>
+          </div>
+        </header>
 
-                    <div className="flex justify-between items-start mb-10">
-                      <div>
-                        <h3 className="font-black text-3xl text-slate-900 tracking-tighter">{brand.name}</h3>
-                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mt-1">{brand.domain}</p>
-                      </div>
-                      <div className={`w-3 h-3 rounded-full ${
-                        audit ? (isAnomaly ? 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]' : 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]') : 'bg-slate-200'
-                      }`}></div>
-                    </div>
-
-                    <div className="space-y-8">
-                      <div className="grid grid-cols-2 gap-6">
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Visibility</p>
-                          <p className="text-3xl font-black text-slate-900 tabular-nums">{audit?.seo?.latest_clicks ?? "—"}</p>
-                          <p className="text-[10px] font-bold text-slate-300 mt-1 italic">Last 7d Clicks</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Revenue</p>
-                          <p className="text-3xl font-black text-blue-600 tabular-nums">
-                            {audit?.retail ? `${Math.round(audit.retail.total_sales/1000)}k` : "—"}
-                          </p>
-                          <p className="text-[10px] font-bold text-blue-300 mt-1 italic">30d Gross (INR)</p>
-                        </div>
-                      </div>
-
-                      {investigation && (
-                        <div className="bg-slate-900 p-6 rounded-3xl space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                          <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
-                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Diagnostic Alert</h4>
-                          </div>
-                      <p className="text-sm text-white font-bold leading-snug">{investigation.hypothesis}</p>
-                      
-                      <div className="flex gap-2">
-                        {investigation.can_auto_fix && (
-                          <button 
-                            onClick={async () => {
-                              addLog(`Syncing inventory status for ${brand.id}...`, "agent");
-                              const res = await fetch(`/agents/auditor/sync-status/${brand.id}`, { method: "POST" });
-                              const data = await res.json();
-                              addLog(`Sync complete: ${data.synced_count} products updated.`, "success");
-                            }}
-                            className="flex-1 bg-emerald-600 text-white py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/20"
-                          >
-                            Sync Stock Status
-                          </button>
-                        )}
-                        <button 
-                          onClick={() => runFix(brand.id)}
-                          disabled={fixing === brand.id}
-                          className="flex-1 bg-white text-slate-900 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 shadow-xl shadow-black/20"
-                        >
-                          {fixing === brand.id ? "THINKING..." : "DEPLOY AI FIX"}
-                        </button>
-                      </div>
-                        </div>
-                      )}
-
-                      {suggestion && (
-                        <div className="bg-indigo-600 p-6 rounded-3xl space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700 shadow-[0_20px_40px_rgba(79,70,229,0.3)]">
-                          <div className="flex justify-between items-center">
-                            <h4 className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em]">Fable 5 Proposal</h4>
-                            <span className="text-[8px] bg-white/20 text-white px-2 py-0.5 rounded font-black tracking-widest">COMPETITOR_AWARE</span>
-                          </div>
-                          <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
-                            <p className="text-[9px] text-indigo-100 font-black uppercase opacity-60 mb-2">Optimized SEO Title</p>
-                            <p className="text-sm text-white font-bold leading-tight italic">"{suggestion.suggested_title}"</p>
-                          </div>
-                          <div className="flex gap-3">
-                            <button className="flex-1 bg-white text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:shadow-lg transition-all active:scale-95">Push to Store</button>
-                            <button className="w-12 h-12 flex items-center justify-center bg-indigo-500 text-white rounded-2xl hover:bg-indigo-400 transition-colors">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {!investigation && (
-                      <button 
-                        onClick={() => runInvestigation(brand.id)}
-                        disabled={investigating === brand.id}
-                        className="w-full mt-10 py-4 bg-transparent border-2 border-slate-100 rounded-[28px] text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-slate-900 hover:text-slate-900 hover:shadow-lg transition-all active:scale-95 disabled:opacity-50"
-                      >
-                        {investigating === brand.id ? "ANALYZING..." : "START INVESTIGATION"}
-                      </button>
-                    )}
-                  </div>
+        {/* SCROLLABLE VIEWPORT */}
+        <div className="flex-1 overflow-y-auto p-12 bg-slate-50/50">
+          <div className="max-w-6xl mx-auto">
+            
+            {activeTab === "dashboard" && (
+              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+                <div className="grid grid-cols-3 gap-8">
+                  <StatCard title="Total Visibility" value={currentAudit?.seo?.latest_clicks ?? "—"} label="Last 7d Clicks" color="slate" />
+                  <StatCard title="Gross Revenue" value={currentAudit?.retail ? `₹${Math.round(currentAudit.retail.total_sales/1000)}k` : "—"} label="30d Shopify" color="blue" />
+                  <StatCard title="SEO Health" value={currentAudit?.status === "healthy" ? "100%" : "Critical"} label="System Scan" color={currentAudit?.status === "healthy" ? "emerald" : "red"} />
                 </div>
-              );
-            })}
+
+                <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50">
+                   <h3 className="text-xl font-black mb-8 flex items-center gap-3">
+                     <span className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-sm">📈</span>
+                     Performance Analytics
+                   </h3>
+                   <div className="h-64 bg-slate-50 rounded-3xl flex items-center justify-center border-2 border-dashed border-slate-200">
+                      <p className="text-slate-400 font-bold text-sm italic">GSC Sparkline Data Loading...</p>
+                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "diagnostics" && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                <header className="flex justify-between items-center mb-8">
+                   <div>
+                      <h2 className="text-3xl font-black tracking-tight italic">SEO Diagnostics</h2>
+                      <p className="text-slate-400 font-bold">Deep product and inventory audit for {currentBrand?.name}</p>
+                   </div>
+                   <button 
+                     onClick={runInvestigation}
+                     disabled={!!investigating}
+                     className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl shadow-slate-200"
+                   >
+                     {investigating ? "Scanning Store..." : "Run Full Diagnostic"}
+                   </button>
+                </header>
+
+                {currentInvestigation ? (
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="bg-slate-900 p-10 rounded-[40px] shadow-2xl">
+                      <h4 className="text-amber-500 font-black uppercase tracking-widest text-[10px] mb-4 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping"></span>
+                        Agent Hypothesis
+                      </h4>
+                      <p className="text-2xl font-bold text-white leading-tight mb-8">
+                        {currentInvestigation.hypothesis}
+                      </p>
+                      <div className="flex gap-4">
+                        <button className="flex-1 bg-white text-slate-900 py-3 rounded-2xl font-black uppercase text-[10px]">View 34 Products</button>
+                        <button onClick={runFix} className="flex-1 bg-blue-600 text-white py-3 rounded-2xl font-black uppercase text-[10px]">Start AI Fix</button>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-xl">
+                      <h4 className="text-slate-400 font-black uppercase tracking-widest text-[10px] mb-6">Issue Breakdown</h4>
+                      <ul className="space-y-4">
+                        <li className="flex justify-between items-center py-3 border-b border-slate-50">
+                          <span className="font-bold text-slate-600">Out of Stock & Live</span>
+                          <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full font-black text-xs">{currentInvestigation.findings.out_of_sync_count}</span>
+                        </li>
+                        <li className="flex justify-between items-center py-3 border-b border-slate-50">
+                          <span className="font-bold text-slate-600">Thin Content</span>
+                          <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full font-black text-xs">{currentInvestigation.findings.thin_content_count}</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-20 text-center bg-white border-2 border-dashed border-slate-200 rounded-[40px]">
+                    <p className="text-slate-400 font-bold">No diagnostic data available. Start an investigation to begin.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "planner" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4">
+                 <div className="flex justify-between items-center mb-12">
+                   <div>
+                      <h2 className="text-3xl font-black tracking-tight">Content Planner</h2>
+                      <p className="text-slate-400 font-bold italic">Strategic keyword targeting for {currentBrand?.name}</p>
+                   </div>
+                   <button className="bg-blue-600 text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest">New Strategy</button>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-lg shadow-slate-200/50">
+                       <h3 className="font-black uppercase tracking-widest text-[10px] text-indigo-500 mb-6 underline decoration-2 underline-offset-8">Keyword Gaps</h3>
+                       <div className="space-y-4">
+                          {["Silk Saree trends 2026", "Designer Wedding Wear", "Luxury Ethnic Sets"].map(kw => (
+                            <div key={kw} className="flex justify-between items-center">
+                              <span className="text-xs font-bold text-slate-700">{kw}</span>
+                              <span className="text-[10px] text-slate-400">High Volume</span>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                    <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-lg shadow-slate-200/50 md:col-span-2">
+                       <h3 className="font-black uppercase tracking-widest text-[10px] text-blue-500 mb-6 underline decoration-2 underline-offset-8">Production Queue</h3>
+                       <p className="text-slate-300 text-sm italic font-bold">Connect your Notion Content Calendar to sync tasks...</p>
+                    </div>
+                 </div>
+              </div>
+            )}
+
+            {activeTab === "injectors" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4">
+                <h2 className="text-3xl font-black mb-8">Bulk Execution Engine</h2>
+                <div className="grid grid-cols-2 gap-8">
+                   <InjectorCard 
+                      title="SEO Metadata Injector" 
+                      desc="Bulk rewrite Titles and Descriptions for the entire 'Lehenga' collection using Fable 5."
+                      action="Start Bulk Inject"
+                      icon="💉"
+                   />
+                   <InjectorCard 
+                      title="Inventory Sync" 
+                      desc="Force 0-stock products to Draft status across the entire store catalog."
+                      action="Run Global Sync"
+                      icon="🔄"
+                   />
+                </div>
+              </div>
+            )}
+
+            {activeTab === "history" && (
+              <div className="bg-white p-10 rounded-[40px] shadow-xl border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
+                <h2 className="text-xl font-black mb-10 flex items-center gap-3">
+                  <span className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-sm">📜</span>
+                  Audit Trail
+                </h2>
+                <div className="space-y-6">
+                  {activityLogs.map(log => (
+                    <div key={log.id} className="flex gap-6 items-start pb-6 border-b border-slate-50 last:border-0">
+                       <span className="text-[10px] font-mono text-slate-400 shrink-0 w-20">{log.time}</span>
+                       <div className="flex-1">
+                          <p className={`text-xs font-bold ${
+                            log.type === "error" ? "text-red-500" : 
+                            log.type === "success" ? "text-emerald-600" : 
+                            log.type === "agent" ? "text-indigo-600" : "text-slate-700"
+                          }`}>
+                            {log.msg}
+                          </p>
+                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
     </main>
+  );
+}
+
+function StatCard({ title, value, label, color }: any) {
+  const colorMap: any = {
+    slate: "text-slate-900",
+    blue: "text-blue-600",
+    emerald: "text-emerald-600",
+    red: "text-red-600"
+  };
+  
+  return (
+    <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col justify-between">
+      <div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">{title}</p>
+        <p className={`text-4xl font-black ${colorMap[color]} tracking-tighter tabular-nums`}>{value}</p>
+      </div>
+      <p className="text-[10px] font-bold text-slate-300 mt-4 italic">{label}</p>
+    </div>
+  );
+}
+
+function InjectorCard({ title, desc, action, icon }: any) {
+  return (
+    <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-xl hover:shadow-2xl transition-all group">
+      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+        {icon}
+      </div>
+      <h3 className="text-xl font-black text-slate-900 mb-3">{title}</h3>
+      <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8">{desc}</p>
+      <button className="w-full bg-slate-900 text-white py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-600 transition-all">
+        {action}
+      </button>
+    </div>
   );
 }
