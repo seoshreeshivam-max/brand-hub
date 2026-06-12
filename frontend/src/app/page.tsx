@@ -181,14 +181,30 @@ export default function Home() {
                             <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Diagnostic Alert</h4>
                           </div>
-                          <p className="text-sm text-white font-bold leading-snug">{investigation.hypothesis}</p>
+                      <p className="text-sm text-white font-bold leading-snug">{investigation.hypothesis}</p>
+                      
+                      <div className="flex gap-2">
+                        {investigation.can_auto_fix && (
                           <button 
-                            onClick={() => runFix(brand.id)}
-                            disabled={fixing === brand.id}
-                            className="w-full bg-white text-slate-900 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 shadow-xl shadow-black/20"
+                            onClick={async () => {
+                              addLog(`Syncing inventory status for ${brand.id}...`, "agent");
+                              const res = await fetch(`/agents/auditor/sync-status/${brand.id}`, { method: "POST" });
+                              const data = await res.json();
+                              addLog(`Sync complete: ${data.synced_count} products updated.`, "success");
+                            }}
+                            className="flex-1 bg-emerald-600 text-white py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/20"
                           >
-                            {fixing === brand.id ? "THINKING..." : "DEPLOY AI FIX"}
+                            Sync Stock Status
                           </button>
+                        )}
+                        <button 
+                          onClick={() => runFix(brand.id)}
+                          disabled={fixing === brand.id}
+                          className="flex-1 bg-white text-slate-900 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 shadow-xl shadow-black/20"
+                        >
+                          {fixing === brand.id ? "THINKING..." : "DEPLOY AI FIX"}
+                        </button>
+                      </div>
                         </div>
                       )}
 

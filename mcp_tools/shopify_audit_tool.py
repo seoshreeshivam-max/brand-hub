@@ -11,18 +11,21 @@ from backend.auth_manager import auth_manager
 
 class ShopifyAuditTool:
     """
-    Diagnostic tool to check product health and metadata consistency.
+    Advanced Diagnostic tool for product health, inventory sync, and category depth.
     """
     def get_product_seo_health(self, brand_id: str, product_id: str = None):
         """
-        Audits products for missing SEO titles, descriptions, or out-of-stock status.
+        Audits products for:
+        - Status vs Stock sync (Stock > 0 should be live, 0 should be draft)
+        - Deep details (Category/Product Type, Title, Name)
+        - SEO thickness
         """
         token = auth_manager.get_shopify_token(brand_id)
         prefix = brand_id.upper().replace("-", "_")
         store = os.getenv(f"{prefix}_SHOPIFY_STORE") or os.getenv("SHOPIFY_STORE")
         
-        # If no product_id, fetch latest 10 products for audit
-        url = f"https://{store}/admin/api/2024-04/products.json?limit=10"
+        # Fetch products with extended fields
+        url = f"https://{store}/admin/api/2024-04/products.json?limit=20"
         if product_id:
             url = f"https://{store}/admin/api/2024-04/products/{product_id}.json"
             
@@ -34,22 +37,35 @@ class ShopifyAuditTool:
         for p in products:
             if not p: continue
             
-            # Check inventory
+            # Check inventory across all variants
             total_inventory = sum(v.get("inventory_quantity", 0) for v in p.get("variants", []))
+            current_status = p.get("status") # active, draft, or archived
+            product_type = p.get("product_type") # Category
             
-            # Check SEO Metadata (via Metafields - simplified for v0.0)
             issues = []
-            if total_inventory == 0:
-                issues.append("OUT_OF_STOCK")
+            recommendations = []
+            
+            # Rule: Stock > 0 -> Active; Stock == 0 -> Draft
+            if total_inventory > 0 and current_status != "active":
+                issues.append("STOCK_AVAILABLE_BUT_DRAFT")
+                recommendations.append("SET_TO_LIVE")
+            elif total_inventory <= 0 and current_status == "active":
+                issues.append("LIVE_BUT_OUT_OF_STOCK")
+                recommendations.append("MOVE_TO_DRAFT")
+                
             if len(p.get("body_html", "")) < 100:
                 issues.append("THIN_CONTENT")
             
             audit_results.append({
                 "id": p["id"],
-                "title": p["title"],
-                "status": p["status"],
+                "name": p["title"],
+                "category": product_type or "Uncategorized",
+                "status": current_status,
                 "inventory": total_inventory,
-                "issues": issues
+                "issues": issues,
+                "recommendations": recommendations,
+                "vendor": p.get("vendor"),
+                "tags": p.get("tags")
             })
             
         return audit_results

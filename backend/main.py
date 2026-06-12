@@ -93,16 +93,25 @@ async def draft_content_fix(brand_id: str, product_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/agents/content/apply-fix/{brand_id}")
-async def apply_content_fix(brand_id: str, fix_data: dict):
+@app.post("/agents/auditor/sync-status/{brand_id}")
+async def sync_product_status(brand_id: str):
     try:
-        result = content_agent.apply_fix(
-            brand_id, 
-            fix_data["product_id"], 
-            fix_data.get("suggested_title"), 
-            fix_data.get("suggested_body_html")
-        )
-        return {"status": "success", "product": result}
+        from mcp_tools.shopify_audit_tool import shopify_audit_tool
+        from mcp_tools.shopify_content_tool import shopify_content_tool
+        
+        # 1. Find mismatched products
+        products = shopify_audit_tool.get_product_seo_health(brand_id)
+        synced_count = 0
+        
+        for p in products:
+            if "LIVE_BUT_OUT_OF_STOCK" in p["issues"]:
+                shopify_content_tool.update_product_status(brand_id, p["id"], "draft")
+                synced_count += 1
+            elif "STOCK_AVAILABLE_BUT_DRAFT" in p["issues"]:
+                shopify_content_tool.update_product_status(brand_id, p["id"], "active")
+                synced_count += 1
+                
+        return {"status": "success", "synced_count": synced_count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
