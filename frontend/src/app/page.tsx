@@ -453,7 +453,7 @@ function BenchmarkCard({ title, currentValue, benchmarkValue, trend, trendLabel,
     red: "bg-red-50"
   };
 
-  const displayVal = currentValue && currentValue !== "—" ? currentValue : "Pending Sync";
+  const displayVal = currentValue !== undefined && currentValue !== null && currentValue !== "—" ? currentValue : "Pending Sync";
 
   return (
     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col justify-between group hover:border-blue-200 transition-all">
