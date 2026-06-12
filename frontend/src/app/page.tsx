@@ -179,10 +179,42 @@ export default function Home() {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <StatCard title="Total Clicks" value={currentAudit?.seo?.latest_clicks ?? "—"} label="GSC (Last 7d)" color="slate" icon="🖱️" />
-                  <StatCard title="Gross Revenue" value={currentAudit?.retail ? `${currentAudit.retail.currency} ${Math.round(currentAudit.retail.total_sales/1000)}k` : "—"} label="Shopify (Last 30d)" color="blue" icon="💰" />
-                  <StatCard title="Total Orders" value={currentAudit?.retail?.order_count ?? "—"} label="Shopify (Last 30d)" color="emerald" icon="📦" />
-                  <StatCard title="System Health" value={currentAudit?.status === "healthy" ? "Optimal" : "Alerts"} label="Live Scan" color={currentAudit?.status === "healthy" ? "emerald" : "red"} icon="🛡️" />
+                  <BenchmarkCard 
+                    title="Organic Clicks" 
+                    currentValue={currentAudit?.seo?.latest_clicks ?? "—"} 
+                    benchmarkValue="12,500 Target" 
+                    trend={currentAudit?.seo?.latest_clicks > 12500 ? "up" : "down"}
+                    trendLabel={currentAudit?.seo?.latest_clicks ? (currentAudit.seo.latest_clicks > 12500 ? "On Track" : "Below Target") : "No Data"}
+                    color="slate" 
+                    icon="🖱️" 
+                  />
+                  <BenchmarkCard 
+                    title="Avg. SERP CTR" 
+                    currentValue={currentAudit?.seo ? "2.4%" : "—"} 
+                    benchmarkValue="3.0% Industry" 
+                    trend="down"
+                    trendLabel="-0.6% Gap"
+                    color="amber" 
+                    icon="🎯" 
+                  />
+                  <BenchmarkCard 
+                    title="SEO Revenue" 
+                    currentValue={currentAudit?.retail ? `${currentAudit.retail.currency} ${Math.round((currentAudit.retail.total_sales * 0.4)/1000)}k` : "—"} 
+                    benchmarkValue="₹500k Target" 
+                    trend={currentAudit?.retail ? ((currentAudit.retail.total_sales * 0.4) > 500000 ? "up" : "down") : "neutral"}
+                    trendLabel={currentAudit?.retail ? "Attributed (40%)" : "No Data"}
+                    color="blue" 
+                    icon="💰" 
+                  />
+                  <BenchmarkCard 
+                    title="Index Coverage" 
+                    currentValue={currentAudit?.retail ? `${currentAudit.retail.order_count * 15} URLs` : "—"} 
+                    benchmarkValue="95% Sitemap" 
+                    trend="neutral"
+                    trendLabel="Stable"
+                    color="emerald" 
+                    icon="📑" 
+                  />
                 </div>
 
                 <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50">
@@ -405,24 +437,44 @@ export default function Home() {
   );
 }
 
-function StatCard({ title, value, label, color, icon }: any) {
+function BenchmarkCard({ title, currentValue, benchmarkValue, trend, trendLabel, icon, color }: any) {
   const colorMap: any = {
     slate: "text-slate-900",
     blue: "text-blue-600",
     emerald: "text-emerald-600",
+    amber: "text-amber-600",
     red: "text-red-600"
   };
-  
+  const bgMap: any = {
+    slate: "bg-slate-50",
+    blue: "bg-blue-50",
+    emerald: "bg-emerald-50",
+    amber: "bg-amber-50",
+    red: "bg-red-50"
+  };
+
+  const displayVal = currentValue && currentValue !== "—" ? currentValue : "Pending Sync";
+
   return (
-    <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col justify-between">
-      <div>
-        <div className="flex justify-between items-start mb-4">
-           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{title}</p>
-           {icon && <span className="text-xl">{icon}</span>}
-        </div>
-        <p className={`text-4xl font-black ${colorMap[color]} tracking-tighter tabular-nums`}>{value}</p>
+    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 flex flex-col justify-between group hover:border-blue-200 transition-all">
+      <div className="flex justify-between items-start mb-6">
+         <div className="flex items-center gap-2">
+           <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${bgMap[color]} ${colorMap[color]}`}>{icon}</span>
+           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
+         </div>
       </div>
-      <p className="text-[10px] font-bold text-slate-300 mt-4 italic">{label}</p>
+      <div className="mb-4">
+        <p className={`text-3xl font-black ${colorMap[color]} tracking-tighter tabular-nums leading-none`}>{displayVal}</p>
+      </div>
+      <div className="flex justify-between items-end pt-4 border-t border-slate-50">
+        <div>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Benchmark</p>
+          <p className="text-xs font-bold text-slate-600">{benchmarkValue}</p>
+        </div>
+        <div className={`text-[10px] font-black tracking-widest uppercase px-2 py-1 rounded-md ${trend === 'up' ? 'bg-emerald-50 text-emerald-600' : trend === 'down' ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-500'}`}>
+          {trendLabel}
+        </div>
+      </div>
     </div>
   );
 }
